@@ -1,0 +1,12 @@
+arm:
+  script:
+    - cd build
+    - CXX=clang++ cmake ..
+    - make -j$(nproc)
+  tags:
+    - linux
+    - arm
+    - asio
+  artifacts:
+    paths:
+      - build/products/Release/botanio
