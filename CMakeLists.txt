@@ -24,6 +24,9 @@ include(FindBotan)
 # Actually search for botan
 find_package(Botan REQUIRED)
 
+# Search for the systems threading library
+find_package(Threads REQUIRED)
+
 # Tell CMake about our custom include paths
 include_directories("include")
 
