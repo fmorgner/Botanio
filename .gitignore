@@ -1,0 +1,5 @@
+# exclude build directory
+build
+
+# exclude compiled ycm config
+.ycm_extra_conf.pyc
