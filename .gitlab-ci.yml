@@ -9,4 +9,4 @@ arm:
     - asio
   artifacts:
     paths:
-      - build/products/Release/botanio
+      - build/products/Release/bin/botanio
