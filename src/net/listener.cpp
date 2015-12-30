@@ -1,5 +1,6 @@
 #include "net/connection.h"
 #include "net/listener.h"
+#include "tls/policy.h"
 
 namespace botanio
   {
@@ -31,7 +32,7 @@ namespace botanio
     m_acceptor.async_accept(m_temporary, [this](auto const & error) {
       if(!error)
         {
-        auto inserted = m_connections.insert(connection::make_connection(std::move(m_temporary)));
+        auto inserted = m_connections.insert(connection::make_connection(std::move(m_temporary), policy{}));
 
         if(inserted.second)
           {

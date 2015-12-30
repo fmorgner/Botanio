@@ -3,9 +3,9 @@
 namespace botanio
   {
 
-  std::shared_ptr<connection> connection::make_connection(asio::ip::tcp::socket && socket)
+  connection::pointer connection::make_connection(tcp_socket && socket, policy const & policy)
     {
-    return std::shared_ptr<connection>{new connection(std::move(socket))};
+    return pointer{new connection(std::move(socket), policy)};
     }
 
   void connection::start()
@@ -27,7 +27,9 @@ namespace botanio
     do_send();
     }
 
-  connection::connection(asio::ip::tcp::socket && socket) : m_socket{std::move(socket)}
+  connection::connection(tcp_socket && socket, policy const & policy)
+    : m_socket{std::move(socket)},
+      m_policy{policy}
     {
 
     }
