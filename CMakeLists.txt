@@ -29,6 +29,7 @@ find_package(Threads REQUIRED)
 
 # Tell CMake about our custom include paths
 include_directories("include")
+include_directories(${BOTAN_INCLUDE_DIRS})
 
 # Include the CMakeLists.txt found in the folder "src"
 add_subdirectory(src)
