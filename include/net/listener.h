@@ -22,8 +22,9 @@ namespace botanio
 
     private:
       asio::ip::tcp::acceptor m_acceptor;
-      std::set<std::shared_ptr<struct connection>> m_connections{};
       asio::ip::tcp::socket m_temporary;
+
+      std::set<std::shared_ptr<struct connection>> m_connections{};
     };
 
   }
