@@ -5,7 +5,7 @@ import subprocess
 import re
 
 script_dir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
-botan_dir = str(subprocess.check_output(['botan-config-1.10', '--cflags']))
+botan_dir = str(subprocess.check_output(['pkg-config', '--cflags-only-I', 'botan-1.11']))
 
 flags = [
     '-x',
