@@ -13,7 +13,7 @@ namespace botanio
 
   struct connection : std::enable_shared_from_this<connection>
     {
-    explicit connection(asio::ip::tcp::socket && socket);
+    static std::shared_ptr<connection> make_connection(asio::ip::tcp::socket && socket);
 
     void start();
     void abort();
@@ -21,6 +21,8 @@ namespace botanio
     void send(std::string const & data);
 
     private:
+      explicit connection(asio::ip::tcp::socket && socket);
+
       void do_send();
       void do_read();
 
