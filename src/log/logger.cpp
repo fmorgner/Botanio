@@ -69,7 +69,7 @@ namespace botanio
           }
 
         m_out << part;
-        m_continuation = true;
+        m_continuation = parts.size() > 1;
         }
       }
 
