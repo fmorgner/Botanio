@@ -5,11 +5,7 @@
 namespace botanio
   {
 
-  listener::listener(asio::io_service & runLoop)
-    : m_acceptor{runLoop},
-      m_temporary{runLoop},
-      m_credentials{"cert.pem", "key.pem"},
-      m_policy{}
+  listener::listener(asio::io_service & runLoop) : m_loop{runLoop}
     {
 
     }
@@ -21,12 +17,20 @@ namespace botanio
     m_acceptor.bind(asio::ip::tcp::endpoint{asio::ip::address{}, port});
     m_acceptor.listen();
     do_accept();
-    m_acceptor.get_io_service().run();
+    do_run();
     }
 
-  void listener::abort()
+  void listener::do_run()
     {
+    for(size_t threadIndex = 0; threadIndex < std::thread::hardware_concurrency(); ++threadIndex)
+      {
+      m_threads.emplace_back([&]{ m_loop.run(); });
+      }
 
+    for(auto & thread : m_threads)
+      {
+      thread.join();
+      }
     }
 
   void listener::do_accept()
@@ -34,16 +38,15 @@ namespace botanio
     m_acceptor.async_accept(m_temporary, [this](auto const & error) {
       if(!error)
         {
-        auto inserted = m_connections.insert(connection::make_connection(std::move(m_temporary), m_policy,
-                                                                         m_manager, m_credentials));
-
+        auto inserted = m_connections.insert(connection::make_connection(std::move(m_temporary), m_policy, m_manager,
+                                                                         m_credentials));
         if(inserted.second)
           {
           (*inserted.first)->start();
           }
-        }
 
         do_accept();
+        }
       });
     }
 

@@ -1,6 +1,7 @@
 #ifndef __BOTANIO__CONNECTION
 #define __BOTANIO__CONNECTION
 
+#include "asio/strand.hpp"
 #include "asio/ip/tcp.hpp"
 
 #include "botan/auto_rng.h"
@@ -14,6 +15,7 @@
 #include <memory>
 #include <queue>
 #include <string>
+#include <vector>
 
 namespace botanio
   {
@@ -52,7 +54,9 @@ namespace botanio
       Botan::TLS::Server m_tls;
 
       std::array<uint8_t, 128> m_incoming;
-      std::deque<std::string> m_outgoing;
+      std::deque<std::vector<uint8_t>> m_outgoing;
+
+      asio::io_service::strand m_strand;
     };
 
   }
