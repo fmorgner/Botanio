@@ -1,1 +1,1 @@
-add_library(tls OBJECT policy.cpp)
+add_library(tls OBJECT policy.cpp credentials.cpp)
