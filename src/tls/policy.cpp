@@ -30,7 +30,7 @@ namespace botanio
 
   std::vector<std::string> policy::allowed_macs() const
     {
-    return {"secp256r1"};
+    return {"AEAD"};
     }
 
   }
