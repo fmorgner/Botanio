@@ -12,6 +12,7 @@ flags = [
     'c++',
     '-DASIO_STANDALONE',
     '-I' + script_dir + '/include',
+    '-I' + script_dir + '/include/third_party/asio',
     botan_dir[:-1],
     '-Wall',
     '-Werror',
