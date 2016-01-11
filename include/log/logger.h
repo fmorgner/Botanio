@@ -1,6 +1,9 @@
 #ifndef __BOTANIO_LOG__LOGGER
 #define __BOTANIO_LOG__LOGGER
 
+#include <asio/io_service.hpp>
+#include <asio/strand.hpp>
+
 #include <cstdint>
 #include <iosfwd>
 #include <vector>
@@ -14,7 +17,8 @@ namespace botanio
 
   struct logger
     {
-    explicit logger(std::ostream & out, log_level const initial = log_level::info, log_level const limit = log_level::debug);
+    logger(std::ostream & out, asio::io_service & loop, log_level const initial = log_level::info,
+           log_level const limit = log_level::debug);
 
     logger & operator<<(std::string const & message);
     logger & operator<<(std::vector<uint8_t> const & data);
@@ -30,6 +34,7 @@ namespace botanio
 
     private:
       std::ostream & m_out;
+      asio::io_service & m_loop;
       log_level const m_initial;
       log_level const m_limit;
 
@@ -41,6 +46,8 @@ namespace botanio
 
       bool m_logging{};
       bool m_continuation{};
+
+      asio::io_service::strand m_strand{m_loop};
     };
 
   }

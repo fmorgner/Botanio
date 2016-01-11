@@ -41,8 +41,9 @@ namespace botanio
       }
     }
 
-  logger::logger(std::ostream & out, log_level const initial, log_level const limit)
+  logger::logger(std::ostream & out, asio::io_service & loop, log_level const initial, log_level const limit)
     : m_out{out},
+      m_loop{loop},
       m_initial{initial},
       m_limit{limit}
     {
@@ -51,8 +52,7 @@ namespace botanio
 
   logger & logger::operator<<(std::string const & message)
     {
-    auto parts = split(message);
-
+    m_strand.post([this, parts = split(message)]{
     if(m_current >= m_minimum)
       {
       if(!m_logging)
@@ -71,81 +71,93 @@ namespace botanio
         m_out << part;
         m_continuation = parts.size() > 1;
         }
-      }
+      }});
 
     return *this;
     }
 
   logger & logger::operator<<(std::vector<uint8_t> const & data)
     {
-    auto buf = std::ostringstream{};
+    m_strand.post([this, &data]{
+      auto buf = std::ostringstream{};
 
-    for(size_t index{}; index < data.size(); ++index)
-      {
-      if(index > 0 && !(index % 16))
+      for(size_t index{}; index < data.size(); ++index)
         {
-        buf << '\n';
+        if(index > 0 && !(index % 16))
+          {
+          buf << '\n';
+          }
+
+        buf << byte_to_hex(data[index]) << ' ';
         }
 
-      buf << byte_to_hex(data[index]) << ' ';
-      }
+        *this << buf.str();
+      });
 
-    return ((*this) << buf.str());
+    return *this;
     }
 
   logger & logger::operator<<(log_level const level)
     {
-    switch(m_active)
-      {
-      case state::set:
-        switch(m_field)
-          {
-          case log_field::none:
-            break;
-          case log_field::minimum:
-            m_minimum = level;
-            break;
-          }
-        m_active = state::base;
-      case state::base:
-        m_current = level;
-      }
+    m_strand.post([=]{
+      switch(m_active)
+        {
+        case state::set:
+          switch(m_field)
+            {
+            case log_field::none:
+              break;
+            case log_field::minimum:
+              m_minimum = level;
+              break;
+            }
+          m_active = state::base;
+        case state::base:
+          m_current = level;
+        }
+      });
 
     return *this;
     }
 
   logger & logger::operator<<(log_manip const manipulator)
     {
-    switch(manipulator)
-      {
-      case log_manip::reset:
-        m_current = m_initial;
-        m_minimum = m_limit;
-        m_logging = false;
-        m_continuation = false;
-        break;
-      case log_manip::set:
-        m_active = state::set;
-        break;
-      case log_manip::end:
-        if(m_current >= m_minimum)
-          {
-          m_out << '\n';
-          }
-        m_active = state::base;
-        m_current = m_initial;
-        break;
-      }
+    m_strand.post([=]{
+      switch(manipulator)
+        {
+        case log_manip::reset:
+          m_current = m_initial;
+          m_minimum = m_limit;
+          m_logging = false;
+          m_continuation = false;
+          break;
+        case log_manip::set:
+          m_active = state::set;
+          break;
+        case log_manip::end:
+          if(m_current >= m_minimum)
+            {
+            m_logging = false;
+            m_continuation = false;
+            m_out << '\n';
+            }
+          m_active = state::base;
+          m_current = m_initial;
+          break;
+        }
+    });
 
     return *this;
     }
 
   logger & logger::operator<<(log_field const field)
     {
-    if(m_active == state::set)
-      {
-      m_field = field;
-      }
+    m_strand.post([=]{
+      if(m_active == state::set)
+        {
+        m_field = field;
+        }
+      });
 
     return *this;
     }
