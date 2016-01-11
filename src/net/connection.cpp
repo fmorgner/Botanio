@@ -2,6 +2,10 @@
 #include "net/connection.h"
 #include "tls/policy.h"
 
+#include "asio/write.hpp"
+
+#include <iostream>
+
 using namespace std::placeholders;
 
 namespace botanio
@@ -38,57 +42,65 @@ namespace botanio
             [&](auto && data, auto && bytes) { handle_incoming_data(data, bytes); },
             [&](auto && alert, auto && data, auto && bytes) { handle_alert(alert, data, bytes); },
             [&](auto && session) { return handle_handshake(session); },
-            manager, credentials, policy, m_rng}
+            manager, credentials, policy, m_rng},
+      m_strand{m_socket.get_io_service()}
     {
 
     }
 
   void connection::do_send()
     {
-    auto const data = m_outgoing.front();
-    m_outgoing.pop_front();
+    std::vector<uint8_t> const & data = m_outgoing[0];
 
-    m_socket.async_send(asio::buffer(data), [this, that = shared_from_this(), &data](auto const &error, auto const) {
-      if(!error)
+    asio::async_write(m_socket, asio::buffer(data), m_strand.wrap([that = shared_from_this()](auto const & error, auto const ){
+      that->m_outgoing.pop_front();
+
+      if(error)
         {
-        if(m_outgoing.size())
-          {
-          do_send();
-          }
+        std::cerr << error.message() << '\n';
+        that->abort();
         }
-      else
+
+      if(!that->m_outgoing.empty())
         {
-        abort();
+        that->do_send();
         }
-      });
+    }));
     }
 
   void connection::do_read()
     {
-    m_socket.async_receive(asio::buffer(m_incoming), [this, that = shared_from_this()](auto const & error, auto const bytes) {
+    m_socket.async_receive(asio::buffer(m_incoming), m_strand.wrap([that = shared_from_this()](auto const & error,
+                                                                                               auto const bytes) {
       if(!error)
         {
-        log_array(std::clog, m_incoming, bytes);
-
-        m_tls.received_data(m_incoming.data(), bytes);
-        do_read();
+        that->m_tls.received_data(that->m_incoming.data(), bytes);
+        that->do_read();
         }
       else
         {
-        abort();
+        that->abort();
         }
-      });
+      }));
     }
 
   void connection::handle_outgoing_data(uint8_t const * const data, size_t size)
     {
-    m_outgoing.emplace_back((char const * const)data, size);
-    do_send();
+    m_strand.post([this, vec = std::vector<uint8_t>{data, data + size}](){
+      m_outgoing.push_back(std::move(vec));
+
+      if(!(m_outgoing.size() > 1))
+        {
+        do_send();
+        }
+      });
     }
 
   void connection::handle_incoming_data(uint8_t const * const data, size_t size)
     {
-    send({(char const * const)data, size});
+    m_strand.post([this, dat = std::string{(char const * const) data, size}](){
+      send(dat);
+      });
     }
 
   void connection::handle_alert(Botan::TLS::Alert const &, uint8_t const * const, size_t const)
