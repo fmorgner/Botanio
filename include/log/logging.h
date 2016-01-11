@@ -14,7 +14,7 @@ namespace botanio
     {
     out << "Binary data (" << length << " bytes): \n";
 
-    for(int index = 0; index < length; ++index)
+    for(size_t index = 0; index < length; ++index)
       {
       if(index > 0 && !(index % 16))
         {
