@@ -1,3 +1,4 @@
+#include "log/logger.h"
 #include "net/connection.h"
 #include "net/listener.h"
 #include "tls/policy.h"
@@ -5,7 +6,7 @@
 namespace botanio
   {
 
-  listener::listener(asio::io_service & runLoop) : m_loop{runLoop}
+  listener::listener(asio::io_service & runLoop, logger & logger) : m_loop{runLoop}, m_logger{logger}
     {
 
     }
@@ -38,8 +39,10 @@ namespace botanio
     m_acceptor.async_accept(m_temporary, [this](auto const & error) {
       if(!error)
         {
+        m_logger << log_level::info << "Incoming connection from " << m_temporary.remote_endpoint().address().to_string()
+                 << log_manip::end;
         auto inserted = m_connections.insert(connection::make_connection(std::move(m_temporary), m_policy, m_manager,
-                                                                         m_credentials));
+                                                                         m_credentials, m_logger));
         if(inserted.second)
           {
           (*inserted.first)->start();

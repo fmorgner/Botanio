@@ -27,7 +27,7 @@ namespace botanio
     using pointer = std::shared_ptr<connection>;
 
     static pointer make_connection(tcp_socket && socket, policy const & policy, Botan::TLS::Session_Manager & manager,
-                                   Botan::Credentials_Manager & credentials);
+                                   Botan::Credentials_Manager & credentials, struct logger & logger);
 
     void start();
     void abort();
@@ -36,7 +36,7 @@ namespace botanio
 
     private:
       connection(tcp_socket && socket, policy const & policy, Botan::TLS::Session_Manager & manager,
-                 Botan::Credentials_Manager & credentials);
+                 Botan::Credentials_Manager & credentials, struct logger & logger);
 
       void do_send();
       void do_read();
@@ -49,14 +49,16 @@ namespace botanio
     private:
       tcp_socket m_socket;
       policy const & m_policy;
+      Botan::TLS::Server m_tls;
+      struct logger & m_logger;
 
       Botan::AutoSeeded_RNG m_rng;
-      Botan::TLS::Server m_tls;
-
       std::array<uint8_t, 128> m_incoming;
       std::deque<std::vector<uint8_t>> m_outgoing;
-
       asio::io_service::strand m_strand;
+
+      std::string const m_address;
+      uint16_t const m_port;
     };
 
   }

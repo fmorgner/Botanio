@@ -1,1 +1,1 @@
-add_library(log OBJECT logging.cpp)
+add_library(log OBJECT logger.cpp)

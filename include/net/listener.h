@@ -19,7 +19,7 @@ namespace botanio
 
   struct listener
     {
-    explicit listener(asio::io_service &);
+    listener(asio::io_service &, struct logger & logger);
 
     void start(std::uint16_t const port);
 
@@ -29,6 +29,7 @@ namespace botanio
 
     private:
       asio::io_service & m_loop;
+      struct logger & m_logger;
 
       asio::ip::tcp::acceptor m_acceptor{m_loop};
       asio::ip::tcp::socket m_temporary{m_loop};

@@ -1,4 +1,4 @@
-#include "log/logging.h"
+#include "log/logger.h"
 #include "net/connection.h"
 #include "tls/policy.h"
 
@@ -12,9 +12,10 @@ namespace botanio
   {
 
   connection::pointer connection::make_connection(tcp_socket && socket, policy const & policy,
-                                                  Botan::TLS::Session_Manager & manager, Botan::Credentials_Manager & credentials)
+                                                  Botan::TLS::Session_Manager & manager, Botan::Credentials_Manager & credentials,
+                                                  logger & logger)
     {
-    return pointer{new connection(std::move(socket), policy, manager, credentials)};
+    return pointer{new connection(std::move(socket), policy, manager, credentials, logger)};
     }
 
   void connection::start()
@@ -26,8 +27,15 @@ namespace botanio
     {
     auto error = asio::error_code{};
 
+    if(m_socket.is_open())
+      {
+      m_tls.close();
+      }
+
     m_socket.shutdown(m_socket.shutdown_both, error);
     m_socket.close(error);
+
+    m_logger << log_level::info << "Connection to " << m_address << ":" << std::to_string(m_port) << " closed." << log_manip::end;
     }
 
   void connection::send(std::string const & data)
@@ -36,14 +44,17 @@ namespace botanio
     }
 
   connection::connection(tcp_socket && socket, policy const & policy, Botan::TLS::Session_Manager & manager,
-                         Botan::Credentials_Manager & credentials)
+                         Botan::Credentials_Manager & credentials, logger & logger)
     : m_socket{std::move(socket)}, m_policy{policy},
       m_tls{[&](auto && data, auto && bytes) { handle_outgoing_data(data, bytes); },
             [&](auto && data, auto && bytes) { handle_incoming_data(data, bytes); },
             [&](auto && alert, auto && data, auto && bytes) { handle_alert(alert, data, bytes); },
             [&](auto && session) { return handle_handshake(session); },
             manager, credentials, policy, m_rng},
-      m_strand{m_socket.get_io_service()}
+      m_logger{logger},
+      m_strand{m_socket.get_io_service()},
+      m_address{m_socket.remote_endpoint().address().to_string()},
+      m_port{m_socket.remote_endpoint().port()}
     {
 
     }
@@ -57,7 +68,6 @@ namespace botanio
 
       if(error)
         {
-        std::cerr << error.message() << '\n';
         that->abort();
         }
 
@@ -98,18 +108,24 @@ namespace botanio
 
   void connection::handle_incoming_data(uint8_t const * const data, size_t size)
     {
-    m_strand.post([this, dat = std::string{(char const * const) data, size}](){
-      send(dat);
+    auto incoming = std::string((char const * const) data, size);
+    m_logger << incoming << log_manip::end;
+
+    m_strand.post([this, incoming = std::move(incoming)](){
+      send(incoming);
       });
     }
 
-  void connection::handle_alert(Botan::TLS::Alert const &, uint8_t const * const, size_t const)
+  void connection::handle_alert(Botan::TLS::Alert const & alert, uint8_t const * const, size_t const)
     {
-
+    m_logger << log_level::info << "Received TLS alert '" << alert.type_string() << "'" << log_manip::end;
     }
 
   bool connection::handle_handshake(Botan::TLS::Session const &)
     {
+    m_logger << log_level::info << "Handshake with " << m_address << ":" << std::to_string(m_port) << " sucessful."
+             << log_manip::end;
+
     return false;
     }
 

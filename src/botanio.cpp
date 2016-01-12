@@ -1,11 +1,14 @@
+#include "log/logger.h"
 #include "net/listener.h"
 
-#include <thread>
-#include <vector>
+#include <iostream>
+
+using namespace botanio;
 
 int main()
   {
   asio::io_service runLoop{};
-  botanio::listener{runLoop}.start(8443);
+  auto log = logger{std::cout, runLoop};
+  listener{runLoop, log}.start(8443);
   }
 
