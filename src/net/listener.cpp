@@ -42,7 +42,7 @@ namespace botanio
         m_logger << log_level::info << "Incoming connection from " << m_temporary.remote_endpoint().address().to_string()
                  << log_manip::end;
         auto inserted = m_connections.insert(connection::make_connection(std::move(m_temporary), m_policy, m_manager,
-                                                                         m_credentials));
+                                                                         m_credentials, m_logger));
         if(inserted.second)
           {
           (*inserted.first)->start();

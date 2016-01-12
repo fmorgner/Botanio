@@ -143,6 +143,7 @@ namespace botanio
             }
           m_active = state::base;
           m_current = m_initial;
+          m_out << std::flush;
           break;
         }
     });
