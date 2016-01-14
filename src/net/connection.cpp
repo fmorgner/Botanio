@@ -18,7 +18,14 @@ namespace botanio
 
   void connection::start()
     {
-    do_read();
+    auto error = asio::error_code{};
+    auto const & remote = m_socket.remote_endpoint(error);
+
+    if(!error)
+      {
+      m_peer = remote.address().to_string() + ":" + std::to_string(remote.port());
+      do_read();
+      }
     }
 
   void connection::abort(initiator origin)
@@ -39,6 +46,7 @@ namespace botanio
       else
         {
         auto ignored = asio::error_code{};
+        m_logger.info("Closing connection to '"s + m_peer + "'.");
         m_socket.shutdown(asio::ip::tcp::socket::shutdown_both, ignored);
         m_socket.close(ignored);
         }
@@ -136,13 +144,14 @@ namespace botanio
     {
     if(alert.type() == alert.CLOSE_NOTIFY)
       {
+      m_logger.debug("Received TLS 'close' alert from '"s + m_peer + "'.");
       abort();
       }
     }
 
   bool connection::handle_handshake(Botan::TLS::Session const &)
     {
-    m_logger << "Session established" << log_manip::end;
+    m_logger.info("Session with '"s + m_peer + "' established."s);
     return false;
     }
 

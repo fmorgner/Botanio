@@ -59,6 +59,8 @@ namespace botanio
 
       std::array<uint8_t, 1024> m_incoming;
       std::deque<std::vector<uint8_t>> m_outgoing;
+
+      std::string m_peer;
     };
 
   }

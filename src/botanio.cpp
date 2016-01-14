@@ -8,7 +8,7 @@ using namespace botanio;
 int main()
   {
   asio::io_service runLoop{};
-  auto log = logger{std::cout, runLoop};
+  auto log = logger{std::cout};
   listener{runLoop, log}.start(8443);
   }
 
