@@ -11,33 +11,41 @@
 
 #include <memory>
 #include <set>
-#include <thread>
 #include <vector>
+#include <thread>
 
 namespace botanio
   {
 
+  struct logger;
+  struct connection;
+
   struct listener
     {
-    listener(asio::io_service &, struct logger & logger);
+    listener(asio::io_service &, logger & logger);
 
     void start(std::uint16_t const port);
 
     private:
       void do_run();
       void do_accept();
+      void do_stats();
 
     private:
       asio::io_service & m_loop;
-      struct logger & m_logger;
-
       asio::ip::tcp::acceptor m_acceptor{m_loop};
-      asio::ip::tcp::socket m_temporary{m_loop};
+      asio::io_service::work m_dummy{m_loop};
+
+      std::shared_ptr<connection> m_temporary{};
+
+      logger & m_logger;
+
       credentials m_credentials{"cert.pem", "key.pem"};
       policy m_policy{};
       Botan::TLS::Session_Manager_Noop m_manager{};
-      std::set<std::shared_ptr<struct connection>> m_connections{};
-      asio::io_service::work m_dummy{m_loop};
+
+      std::set<std::shared_ptr<connection>> m_connections{};
+
       std::vector<std::thread> m_threads{};
     };
 

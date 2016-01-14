@@ -5,8 +5,11 @@ project(botanio CXX)
 add_definitions(-DASIO_STANDALONE)
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++14 -Wall -Wextra -pedantic -Werror")
 
-#Ignore some harmless warnings
+# Ignore some harmless warnings
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-inconsistent-missing-override -Wno-unused-local-typedef")
+
+# Add debug flags for Debug configuration
+# set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -fsanitize=address")
 
 # Default to "Release" build
 if(NOT CMAKE_BUILD_TYPE)

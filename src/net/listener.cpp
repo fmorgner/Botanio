@@ -8,7 +8,7 @@ namespace botanio
 
   listener::listener(asio::io_service & runLoop, logger & logger) : m_loop{runLoop}, m_logger{logger}
     {
-
+    m_temporary = connection::create(m_loop, m_credentials, m_policy, m_manager, m_logger);
     }
 
   void listener::start(std::uint16_t const port)
@@ -17,7 +17,7 @@ namespace botanio
     m_acceptor.set_option(asio::ip::tcp::socket::reuse_address{true});
     m_acceptor.bind(asio::ip::tcp::endpoint{asio::ip::address{}, port});
     m_acceptor.listen();
-    do_accept();
+
     do_run();
     }
 
@@ -28,6 +28,8 @@ namespace botanio
       m_threads.emplace_back([&]{ m_loop.run(); });
       }
 
+    do_accept();
+
     for(auto & thread : m_threads)
       {
       thread.join();
@@ -36,17 +38,12 @@ namespace botanio
 
   void listener::do_accept()
     {
-    m_acceptor.async_accept(m_temporary, [this](auto const & error) {
+    m_acceptor.async_accept(m_temporary->socket(), [&](auto const & error) {
       if(!error)
         {
-        m_logger << log_level::info << "Incoming connection from " << m_temporary.remote_endpoint().address().to_string()
-                 << log_manip::end;
-        auto inserted = m_connections.insert(connection::make_connection(std::move(m_temporary), m_policy, m_manager,
-                                                                         m_credentials, m_logger));
-        if(inserted.second)
-          {
-          (*inserted.first)->start();
-          }
+        m_temporary->start();
+//        m_connections.insert(std::move(m_temporary));
+        m_temporary = connection::create(m_loop, m_credentials, m_policy, m_manager, m_logger);
 
         do_accept();
         }
