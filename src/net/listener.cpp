@@ -8,7 +8,7 @@ namespace botanio
 
   listener::listener(asio::io_service & runLoop, logger & logger) : m_loop{runLoop}, m_logger{logger}
     {
-    m_temporary = connection::create(m_loop, m_credentials, m_policy, m_manager, m_logger);
+    m_temporary = connection::create(m_loop, m_credentials, m_policy, m_manager, *this, m_logger);
     }
 
   void listener::start(std::uint16_t const port)
@@ -19,6 +19,30 @@ namespace botanio
     m_acceptor.listen();
 
     do_run();
+    }
+
+  void listener::handle_closed(std::shared_ptr<connection> origin)
+    {
+    if(m_connections.erase(origin))
+      {
+      m_logger.debug("Removed connection from connection set.");
+      }
+    else
+      {
+      m_logger.debug("Received close notification for unknown connection!");
+      }
+    }
+
+  void listener::handle_data(std::vector<uint8_t> data, std::shared_ptr<connection> origin)
+    {
+    if(data.size() >= 2 && data[0] == 'D' && data[1] == 'C')
+      {
+      origin->abort(connection::initiator::local);
+      }
+    else
+      {
+      origin->write(data);
+      }
     }
 
   void listener::do_run()
@@ -42,8 +66,8 @@ namespace botanio
       if(!error)
         {
         m_temporary->start();
-//        m_connections.insert(std::move(m_temporary));
-        m_temporary = connection::create(m_loop, m_credentials, m_policy, m_manager, m_logger);
+        m_connections.insert(std::move(m_temporary));
+        m_temporary = connection::create(m_loop, m_credentials, m_policy, m_manager, *this, m_logger);
 
         do_accept();
         }

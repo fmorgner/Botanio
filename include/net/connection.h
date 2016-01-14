@@ -1,6 +1,8 @@
 #ifndef __BOTANIO__CONNECTION
 #define __BOTANIO__CONNECTION
 
+#include "net/observer.h"
+
 #include "tls/transmitter.h"
 #include "tls/context.h"
 
@@ -41,6 +43,7 @@ namespace botanio
                  Botan::Credentials_Manager & credentials,
                  Botan::TLS::Policy const & policy,
                  Botan::TLS::Session_Manager & manager,
+                 observer & observer,
                  logger & logger);
 
       void do_send();
@@ -55,6 +58,7 @@ namespace botanio
       asio::ip::tcp::socket m_socket;
       asio::io_service::strand m_strand;
       context m_tls;
+      observer & m_observer;
       logger & m_logger;
 
       std::array<uint8_t, 1024> m_incoming;

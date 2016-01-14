@@ -49,6 +49,7 @@ namespace botanio
         m_logger.info("Closing connection to '"s + m_peer + "'.");
         m_socket.shutdown(asio::ip::tcp::socket::shutdown_both, ignored);
         m_socket.close(ignored);
+        m_observer.handle_closed(shared_from_this());
         }
       }
     }
@@ -82,10 +83,12 @@ namespace botanio
                          Credentials_Manager & credentials,
                          Policy const & policy,
                          Session_Manager & sessions,
+                         observer & observer,
                          logger & logger)
     : m_socket{loop},
       m_strand{loop},
       m_tls{*this, credentials, policy, sessions},
+      m_observer{observer},
       m_logger{logger}
     {
 
@@ -137,7 +140,8 @@ namespace botanio
 
   void connection::handle_incoming_data(uint8_t const data[], size_t size)
     {
-    write(std::vector<uint8_t>{data, data + size});
+    m_logger.debug("Received " + std::to_string(size) + " bytes from '" + m_peer + "'.");
+    m_observer.handle_data({data, data + size}, shared_from_this());
     }
 
   void connection::handle_alert(Botan::TLS::Alert const & alert, uint8_t const * const, size_t const)

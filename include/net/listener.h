@@ -1,6 +1,8 @@
 #ifndef __BOTANIO_LISTENER
 #define __BOTANIO_LISTENER
 
+#include "net/observer.h"
+
 #include "tls/credentials.h"
 #include "tls/policy.h"
 
@@ -20,11 +22,14 @@ namespace botanio
   struct logger;
   struct connection;
 
-  struct listener
+  struct listener : observer
     {
     listener(asio::io_service &, logger & logger);
 
     void start(std::uint16_t const port);
+
+    void handle_closed(std::shared_ptr<connection> origin);
+    void handle_data(std::vector<uint8_t> data, std::shared_ptr<connection> origin);
 
     private:
       void do_run();
