@@ -9,24 +9,15 @@ cache:
   paths:
     - .conan
 
-x86_64:
+linux_x86_64_build:
+  stage: build
   script:
     - cmake ..
     - make -j$(nproc)
   tags:
     - cxx14
     - x86_64
-  artifacts:
-    paths:
-      - build/products/Release/bin/botanio
-
-armv7:
-  script:
-    - cmake ..
-    - make -j$(nproc)
-  tags:
-    - cxx14
-    - armv7
+    - linux
   artifacts:
     paths:
       - build/products/Release/bin/botanio
