@@ -1,12 +1,32 @@
-arm:
+before_script:
+  - export CONAN_USER_HOME=${PWD}
+  - mkdir -p build
+  - cd build
+  - pip install conan
+  - conan install --build=missing ..
+
+cache:
+  paths:
+    - .conan
+
+x86_64:
   script:
-    - cd build
-    - CXX=clang++ cmake ..
+    - cmake ..
     - make -j$(nproc)
   tags:
-    - linux
-    - arm
-    - asio
+    - cxx14
+    - x86_64
+  artifacts:
+    paths:
+      - build/products/Release/bin/botanio
+
+armv7:
+  script:
+    - cmake ..
+    - make -j$(nproc)
+  tags:
+    - cxx14
+    - armv7
   artifacts:
     paths:
       - build/products/Release/bin/botanio

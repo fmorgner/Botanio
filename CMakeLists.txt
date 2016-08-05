@@ -5,9 +5,9 @@ project(botanio CXX)
 add_definitions(-DASIO_STANDALONE)
 
 # Include Conan packages
-set(${CONAN_BUILD_INFO_FILE} "${CMAKE_BINARY_DIR}/conanbuildinfo.cmake")
+set(CONAN_BUILD_INFO_FILE ${CMAKE_BINARY_DIR}/conanbuildinfo.cmake)
 if(NOT EXISTS ${CONAN_BUILD_INFO_FILE})
-  message(WARNING "No conan package information available. Trying to fix that!")
+  message(STATUS "No conan package information available. Trying to fix that!")
   execute_process(COMMAND conan install --build=missing ${CMAKE_CURRENT_SOURCE_DIR} OUTPUT_QUIET)
 endif()
 
