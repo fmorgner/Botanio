@@ -1,5 +1,10 @@
 # exclude build directory
 build
 
+# excluse YCM and color_coded configurations
+.ycm_extra_conf.py
+.color_coded
+
 # exclude compiled ycm config
-.ycm_extra_conf.pyc
+*.pyc
+__pycache__

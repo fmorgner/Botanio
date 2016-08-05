@@ -1,0 +1,6 @@
+[requires]
+Botan/1.11.30@fmorgner/stable
+Asio/1.10.6@fmorgner/stable
+
+[generators]
+cmake
