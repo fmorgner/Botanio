@@ -21,6 +21,21 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++14 -Wall -Wextra -pedantic -Werr
 # Ignore some harmless warnings
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-inconsistent-missing-override -Wno-unused-local-typedef")
 
+# Handle standard library
+if(NOT BOTANIO_STDLIB)
+  message(STATUS "BOTANIO_STDLIB was not set. Defaulting to libstdc++")
+  set(BOTANIO_STDLIB "libstdc++")
+endif()
+
+if(${BOTANIO_STDLIB} STREQUAL "libstdc++")
+  add_definitions(-stdlib=libstdc++)
+elseif(${BOTANIO_STDLIB} STREQUAL "libc++")
+  add_definitions(-stdlib=libc++)
+  if(${CMAKE_SYSTEM_NAME} STREQUAL "Linux")
+    set(CMAKE_CXX_LINK_FLAGS "${CMAKE_CXX_LINK_FLAGS} -stdlib=libc++ -lc++abi")
+  endif()
+endif()
+
 # Default to "Release" build
 if(NOT CMAKE_BUILD_TYPE)
   set(CMAKE_BUILD_TYPE Release CACHE STRING "The configuration to build" FORCE)

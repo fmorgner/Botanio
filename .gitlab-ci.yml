@@ -2,23 +2,47 @@ before_script:
   - export CONAN_USER_HOME=${PWD}
   - mkdir -p build
   - cd build
-  - conan install --build=missing --settings compiler=${CONAN_COMPILER} --settings compiler.version=${CONAN_COMPILER_VERSION} --settings compiler.libcxx=${CONAN_COMPILER_LIBCXX} ..
+  - source /etc/profile
+  - conan install --build=missing ..
 
-cache:
-  paths:
-    - .conan
-
-linux_x86_64_build:
+.build: &build_base
   stage: build
-  script:
-    - cmake ..
-    - make -j$(nproc)
-  tags:
-    - cxx14
-    - x86_64
-    - linux
-    - clang36
-    - libcxx
   artifacts:
     paths:
       - build/products/Release/bin/botanio
+
+.build_linux_x86_64_clang_libcxx_base: &build_linux_x86_64_clang_libcxx_base
+  <<: *build_base
+  script:
+    - cmake -DBOTANIO_STDLIB=libc++ ..
+    - cmake --build . -- -j$(nproc)
+
+linux_x86_64_clang36_libcxx_build:
+  <<: *build_linux_x86_64_clang_libcxx_base
+  tags:
+    - linux
+    - x86_64
+    - clang36
+    - libcxx
+    - conan
+    - cmake
+
+linux_x86_64_clang37_libcxx_build:
+  <<: *build_linux_x86_64_clang_libcxx_base
+  tags:
+    - linux
+    - x86_64
+    - clang37
+    - libcxx
+    - conan
+    - cmake
+
+linux_x86_64_clang38_libcxx_build:
+  <<: *build_linux_x86_64_clang_libcxx_base
+  tags:
+    - linux
+    - x86_64
+    - clang38
+    - libcxx
+    - conan
+    - cmake
