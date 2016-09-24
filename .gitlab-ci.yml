@@ -2,8 +2,7 @@ before_script:
   - export CONAN_USER_HOME=${PWD}
   - mkdir -p build
   - cd build
-  - pip install conan
-  - conan install --build=missing ..
+  - conan install --build=missing --settings compiler=${CONAN_COMPILER} --settings compiler.version=${CONAN_COMPILER_VERSION} --settings compiler.libcxx=${CONAN_COMPILER_LIBCXX} ..
 
 cache:
   paths:
@@ -18,6 +17,8 @@ linux_x86_64_build:
     - cxx14
     - x86_64
     - linux
+    - clang36
+    - libcxx
   artifacts:
     paths:
       - build/products/Release/bin/botanio
