@@ -1,5 +1,4 @@
 before_script:
-  - export CONAN_USER_HOME=${PWD}
   - mkdir -p build
   - cd build
   - source /etc/profile
